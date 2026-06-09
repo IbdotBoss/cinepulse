@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CinePulse — Movie Reviews</title>
+<style>
+  :root {
+    --bg: #0b0c10;
+    --surface: #1a1c24;
+    --surface-2: #23262f;
+    --border: #2a2e3a;
+    --ink: #e8e9ed;
+    --muted: #8b91a3;
+    --accent: #ff3b6b;
+    --accent-2: #ff8a65;
+    --positive: #4ade80;
+    --negative: #f87171;
+    --mixed: #fbbf24;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* Header */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--positive);
+    box-shadow: 0 0 8px var(--positive);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Views */
+  .view {
+    display: none;
+  }
+
+  .view.active {
+    display: block;
+  }
+
+  /* Search / Filters */
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .search {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--ink);
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search:focus {
+    border-color: var(--accent);
+  }
+
+  .filter-chip {
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 150ms;
+  }
+
+  .filter-chip:hover, .filter-chip.active {
+    background: var(--surface-2);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  /* Movie Grid */
+  .movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .movie-card {
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 200ms, box-shadow 200ms;
+    border: 1px solid var(--border);
+  }
+
+  .movie-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .poster-letter {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--border);
+    text-transform: uppercase;
+  }
+
+  .poster-gradient {
+    position: absolute;
+    inset: 0;
+    opacity: 0.5;
+  }
+
+  .rating-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .movie-info {
+    padding: 14px;
+  }
+
+  .movie-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .movie-meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Detail View */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 150ms;
+  }
+
+  .back-btn:hover {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  .detail-hero {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+
+  .detail-poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 16px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .detail-poster .poster-letter {
+    font-size: 80px;
+  }
+
+  .detail-meta h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .detail-meta .tagline {
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-size: 15px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+
+  .meta-value {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .aggregate-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  .aggregate-score.positive {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--positive);
+  }
+
+  .aggregate-score.mixed {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--mixed);
+  }
+
+  .aggregate-score.negative {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--negative);
+  }
+
+  /* Reviews */
+  .reviews-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .reviews-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .reviews-count {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .review-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    transition: border-color 150ms;
+  }
+
+  .review-card:hover {
+    border-color: var(--accent);
+  }
+
+  .review-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .reviewer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .reviewer-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .reviewer-badge {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 2px 8px;
+    background: var(--surface-2);
+    border-radius: 999px;
+  }
+
+  .sentiment {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .sentiment.positive {
+    background: rgba(74, 222, 128, 0.12);
+    color: var(--positive);
+  }
+
+  .sentiment.mixed {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--mixed);
+  }
+
+  .sentiment.negative {
+    background: rgba(248, 113, 113, 0.12);
+    color: var(--negative);
+  }
+
+  .review-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
+  .review-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .review-score {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .fresh .review-score { color: var(--positive); }
+  .rotten .review-score { color: var(--negative); }
+
+  .new-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+    font-weight: 700;
+    animation: fadeIn 300ms;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  /* Update ticker */
+  .update-bar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(12px);
+  }
+
+  .spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .detail-hero {
+      grid-template-columns: 1fr;
+    }
+    .detail-poster {
+      max-width: 200px;
+      margin: 0 auto;
+    }
+    .movie-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div class="brand-name">CinePulse</div>
+    </div>
+    <div class="live-indicator">
+      <div class="pulse"></div>
+      <span id="live-status">Live · updates every 60s</span>
+    </div>
+  </header>
+
+  <!-- Movie List View -->
+  <div id="list-view" class="view active">
+    <div class="controls">
+      <input type="text" class="search" id="search" placeholder="Search movies..." />
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="Positive">Fresh</button>
+      <button class="filter-chip" data-filter="Mixed">Mixed</button>
+      <button class="filter-chip" data-filter="Negative">Rotten</button>
+    </div>
+    <div class="movie-grid" id="movie-grid"></div>
+  </div>
+
+  <!-- Detail View -->
+  <div id="detail-view" class="view">
+    <button class="back-btn" id="back-btn">← Back to movies</button>
+    <div class="detail-hero">
+      <div class="detail-poster" id="detail-poster">
+        <span class="poster-letter" id="poster-letter"></span>
+        <div class="poster-gradient" id="poster-gradient"></div>
+      </div>
+      <div class="detail-meta">
+        <h1 id="detail-title"></h1>
+        <div class="tagline" id="detail-tagline"></div>
+        <div class="meta-row">
+          <div class="meta-item">
+            <div class="meta-label">Year</div>
+            <div class="meta-value" id="detail-year"></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Director</div>
+            <div class="meta-value" id="detail-director"></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Genre</div>
+            <div class="meta-value" id="detail-genre"></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Runtime</div>
+            <div class="meta-value" id="detail-runtime"></div>
+          </div>
+        </div>
+        <div id="aggregate-score"></div>
+      </div>
+    </div>
+
+    <div class="reviews-header">
+      <h2>Reviews</h2>
+      <div class="reviews-count"><span id="reviews-count">0</span> reviews</div>
+    </div>
+    <div class="review-list" id="review-list"></div>
+  </div>
+</div>
+
+<!-- Update ticker -->
+<div class="update-bar" id="update-bar">
+  <div class="spinner" id="update-spinner" style="display:none"></div>
+  <span id="update-text">Ready</span>
+</div>
+
+<script>
+  // --- Mock data ---
+  const MOVIES = [
+    { id: 1, title: "The Substance", year: 2024, director: "Coralie Fargeat", genre: "Horror", runtime: "2h 21m", letter: "S" },
+    { id: 2, title: "Dune: Part Two", year: 2024, director: "Denis Villeneuve", genre: "Sci-Fi", runtime: "2h 46m", letter: "D" },
+    { id: 3, title: "Anora", year: 2024, director: "Sean Baker", genre: "Comedy-Drama", runtime: "2h 19m", letter: "A" },
+    { id: 4, title: "The Brutalist", year: 2024, director: "Brady Corbet", genre: "Drama", runtime: "3h 35m", letter: "B" },
+    { id: 5, title: "Nosferatu", year: 2024, director: "Robert Eggers", genre: "Horror", runtime: "2h 13m", letter: "N" },
+    { id: 6, title: "A Real Pain", year: 2024, director: "Jesse Eisenberg", genre: "Drama", runtime: "1h 30m", letter: "R" },
+    { id: 7, title: "Conclave", year: 2024, director: "Edward Berger", genre: "Thriller", runtime: "2h 0m", letter: "C" },
+    { id: 8, title: "The Seed of the Sacred Fig", year: 2024, director: "Mohammad Rasoulof", genre: "Drama", runtime: "2h 48m", letter: "S" },
+    { id: 9, title: "Gladiator II", year: 2024, director: "Ridley Scott", genre: "Action", runtime: "2h 28m", letter: "G" },
+    { id: 10, title: "Wicked", year: 2024, director: "Jon M. Chu", genre: "Musical", runtime: "2h 40m", letter: "W" },
+  ];
+
+  const REVIEW_SOURCES = [
+    { name: "The Guardian", badge: "Critic" },
+    { name: "Variety", badge: "Industry" },
+    { name: "IndieWire", badge: "Indie" },
+    { name: "RogerEbert.com", badge: "Legacy" },
+    { name: "The Atlantic", badge: "Essays" },
+    { name: "Empire", badge: "Mainstream" },
+    { name: "Little White Lies", badge: "Cult" },
+    { name: "Film Comment", badge: "Arthouse" },
+    { name: "Vulture", badge: "Pop Culture" },
+    { name: "The Hollywood Reporter", badge: "Trade" },
+  ];
+
+  const REVIEW_TEMPLATES = [
+    "A masterclass in [adj] filmmaking. [Movie] delivers on every level — the craft is undeniable and the ambition pays off. One of the year's best.",
+    "Uneven but fascinating. The first half promises greatness; the second half struggles under its own weight. Still worth your time.",
+    "Bold, abrasive, and unapologetically strange. This won't be for everyone, but if it clicks, it sticks.",
+    "Impeccably crafted but emotionally distant. Technical mastery doesn't always translate to the gut punch this story seems to want.",
+    "A pleasant surprise. Low expectations were rewarded — this is smarter and more layered than the trailer suggested.",
+    "This is why we go to the cinema. Big, bold, and unafraid to take risks. A genuinely exhilarating experience.",
+    "Competent but conventional. It hits every beat you expect without ever subverting them. Fine, not essential.",
+    "Stunning visual design papering over a thin script. You'll want to rewatch it for the cinematography alone.",
+    "A quiet revelation. Small in scale but resonant — this one lingers in the mind long after the credits.",
+    "Overlong and self-indulgent. There's a great 90-minute movie inside this, but you have to earn the ending.",
+  ];
+
+  const ADJECTIVES = ["visionary", "undisciplined", "restrained", "ferocious", "inventive"];
+
+  // Generate a review
+  function generateReview(id, movieTitle) {
+    const source = REVIEW_SOURCES[id % REVIEW_SOURCES.length];
+    const template = REVIEW_TEMPLATES[id % REVIEW_TEMPLATES.length];
+    const adj = ADJECTIVES[id % ADJECTIVES.length];
+    const body = template.replace("[adj]", adj).replace("[Movie]", movieTitle);
+
+    const rand = Math.random();
+    let sentiment, score;
+    if (rand < 0.55) { sentiment = "Positive"; score = Math.floor(Math.random() * 20) + 80; }
+    else if (rand < 0.85) { sentiment = "Mixed"; score = Math.floor(Math.random() * 20) + 50; }
+    else { sentiment = "Negative"; score = Math.floor(Math.random() * 30) + 20; }
+
+    return {
+      id,
+      source: source.name,
+      badge: source.badge,
+      author: ["A.O. Scott", "Bilge Ebiri", "Alison Willmore", "David Ehrlich", "K. Austin Collins", "Angelica Jade Bastien", "Robert Daniels", "Esther Zuckerman"][id % 8],
+      sentiment,
+      score,
+      body,
+      date: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      isNew: Math.random() < 0.3,
+    };
+  }
+
+  // Initialize reviews
+  let movieReviews = {};
+  MOVIES.forEach((movie) => {
+    const count = Math.floor(Math.random() * 6) + 6;
+    movieReviews[movie.id] = Array.from({ length: count }, (_, i) => generateReview(i, movie.title));
+  });
+
+  // Gradients for posters
+  const gradients = [
+    "linear-gradient(135deg, #ff3b6b22, #ff8a6522)",
+    "linear-gradient(135deg, #6366f122, #a855f722)",
+    "linear-gradient(135deg, #0ea5e922, #22d3ee22)",
+    "linear-gradient(135deg, #84cc1622, #10b98122)",
+    "linear-gradient(135deg, #f59e0b22, #ef444422)",
+    "linear-gradient(135deg, #8b5cf622, #ec489922)",
+    "linear-gradient(135deg, #14b8a622, #06b6d422)",
+    "linear-gradient(135deg, #f43f5e22, #f9731622)",
+    "linear-gradient(135deg, #3b82f622, #6366f122)",
+    "linear-gradient(135deg, #a855f722, #ec489922)",
+  ];
+
+  // State
+  let currentFilter = "all";
+  let selectedMovie = null;
+
+  // DOM
+  const listView = document.getElementById("list-view");
+  const detailView = document.getElementById("detail-view");
+  const movieGrid = document.getElementById("movie-grid");
+  const searchInput = document.getElementById("search");
+
+  // Aggregate score from reviews
+  function aggregateScore(reviews) {
+    const avg = reviews.reduce((sum, r) => sum + r.score, 0) / reviews.length;
+    const cls = avg >= 70 ? "positive" : avg >= 50 ? "mixed" : "negative";
+    const label = avg >= 70 ? "Fresh" : avg >= 50 ? "Mixed" : "Rotten";
+    return { avg: Math.round(avg), cls, label };
+  }
+
+  // Render movie card
+  function renderMovieCard(movie, filter) {
+    const reviews = movieReviews[movie.id] || [];
+    const filteredReviews = filter === "all" ? reviews : reviews.filter(r => r.sentiment === filter);
+    const agg = aggregateScore(reviews);
+
+    const card = document.createElement("div");
+    card.className = "movie-card";
+    card.dataset.id = movie.id;
+
+    card.innerHTML = `
+      <div class="poster">
+        <div class="poster-gradient" style="background: ${gradients[movie.id - 1]}"></div>
+        <span class="poster-letter">${movie.letter}</span>
+        <div class="rating-badge">${agg.avg}%</div>
+      </div>
+      <div class="movie-info">
+        <div class="movie-title">${movie.title}</div>
+        <div class="movie-meta">${movie.year} · ${movie.genre} · ${filteredReviews.length} reviews</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => showDetail(movie));
+    return card;
+  }
+
+  // Render grid
+  function renderGrid() {
+    const query = searchInput.value.toLowerCase();
+    movieGrid.innerHTML = "";
+
+    MOVIES.forEach((movie) => {
+      if (query && !movie.title.toLowerCase().includes(query)) return;
+      movieGrid.appendChild(renderMovieCard(movie, currentFilter));
+    });
+  }
+
+  // Show detail
+  function showDetail(movie) {
+    selectedMovie = movie;
+    const reviews = movieReviews[movie.id] || [];
+
+    document.getElementById("poster-letter").textContent = movie.letter;
+    document.getElementById("poster-gradient").style.background = gradients[movie.id - 1];
+    document.getElementById("detail-title").textContent = movie.title;
+    document.getElementById("detail-tagline").textContent = reviews.length > 0 ? reviews[0].body.slice(0, 80) + "…" : "";
+    document.getElementById("detail-year").textContent = movie.year;
+    document.getElementById("detail-director").textContent = movie.director;
+    document.getElementById("detail-genre").textContent = movie.genre;
+    document.getElementById("detail-runtime").textContent = movie.runtime;
+
+    const agg = aggregateScore(reviews);
+    document.getElementById("aggregate-score").innerHTML = `
+      <span class="aggregate-score ${agg.cls}">${agg.label} · ${agg.avg}%</span>
+    `;
+
+    const reviewList = document.getElementById("review-list");
+    document.getElementById("reviews-count").textContent = reviews.length;
+
+    if (reviews.length === 0) {
+      reviewList.innerHTML = `<div class="empty"><div class="empty-icon">🎬</div><div>No reviews yet. They'll appear here.</div></div>`;
+    } else {
+      reviewList.innerHTML = "";
+      reviews.forEach((r) => {
+        const card = document.createElement("div");
+        card.className = `review-card ${r.sentiment === "Positive" ? "fresh" : r.sentiment === "Negative" ? "rotten" : ""}`;
+        card.innerHTML = `
+          <div class="review-top">
+            <div class="reviewer">
+              <div class="avatar">${r.author.split(" ").map(w => w[0]).join("")}</div>
+              <div>
+                <div class="reviewer-name">${r.author}</div>
+                <div class="reviewer-badge">${r.source}</div>
+              </div>
+            </div>
+            <span class="sentiment ${r.sentiment.toLowerCase()}">${r.sentiment}</span>
+          </div>
+          <div class="review-body">${r.body}</div>
+          <div class="review-footer">
+            <div class="review-score">★ ${r.score}/100</div>
+            <div>${r.date} ${r.isNew ? '<span class="new-badge">NEW</span>' : ''}</div>
+          </div>
+        `;
+        reviewList.appendChild(card);
+      });
+    }
+
+    listView.classList.remove("active");
+    detailView.classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  // Back to list
+  document.getElementById("back-btn").addEventListener("click", () => {
+    detailView.classList.remove("active");
+    listView.classList.add("active");
+    selectedMovie = null;
+  });
+
+  // Search
+  searchInput.addEventListener("input", renderGrid);
+
+  // Filter chips
+  document.querySelectorAll(".filter-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      currentFilter = chip.dataset.filter;
+      renderGrid();
+    });
+  });
+
+  // Refresh: add 1 new review to a random movie periodically
+  let refreshTimeout;
+  function scheduleRefresh() {
+    refreshTimeout = setTimeout(() => {
+      const randomMovie = MOVIES[Math.floor(Math.random() * MOVIES.length)];
+      const newReview = generateReview(Date.now(), randomMovie.title);
+      newReview.date = "Just now";
+      newReview.isNew = true;
+      movieReviews[randomMovie.id].unshift(newReview);
+
+      const spinner = document.getElementById("update-spinner");
+      const updateText = document.getElementById("update-text");
+      spinner.style.display = "block";
+      updateText.textContent = "Updating…";
+
+      setTimeout(() => {
+        spinner.style.display = "none";
+        updateText.textContent = `Updated · ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
+        renderGrid();
+        if (selectedMovie && selectedMovie.id === randomMovie.id) {
+          showDetail(selectedMovie);
+        }
+        scheduleRefresh();
+      }, 800);
+    }, 60000);
+  }
+
+  scheduleRefresh();
+
+  // Initial render
+  renderGrid();
+</script>
+</body>
+</html>
